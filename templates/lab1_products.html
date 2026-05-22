@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lab 1 — Hidden Data</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; }
+        header { background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 40px; display: flex; align-items: center; gap: 20px; }
+        header a { color: #58a6ff; text-decoration: none; font-size: 0.9rem; }
+        header h2 { color: #f85149; font-size: 1.1rem; }
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        .info-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.6; }
+        .info-box strong { color: #58a6ff; }
+        .payload-box { background: #161b22; border: 1px solid #f2cc60; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .payload-box h4 { color: #f2cc60; margin-bottom: 8px; }
+        .payload-box code { background: #0d1117; padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; color: #f2cc60; display: block; margin: 4px 0; }
+        form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        input[type=text] { flex: 1; padding: 10px 14px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 0.95rem; }
+        button { padding: 10px 22px; background: #238636; border: none; border-radius: 6px; color: white; font-size: 0.95rem; cursor: pointer; }
+        button:hover { background: #2ea043; }
+        .query-display { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.82rem; color: #f2cc60; margin-bottom: 20px; word-break: break-all; }
+        table { width: 100%; border-collapse: collapse; background: #161b22; border-radius: 8px; overflow: hidden; }
+        th { background: #21262d; padding: 10px 14px; text-align: left; font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 10px 14px; border-top: 1px solid #30363d; font-size: 0.88rem; }
+        tr:hover td { background: #1c2128; }
+        .badge-hidden { background: #3d1f00; color: #f85149; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
+        .badge-visible { background: #1a3a1a; color: #56d364; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
+        .no-results { text-align: center; color: #8b949e; padding: 30px; }
+
+        /* ── CELEBRATION POPUP ── */
+        .popup-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; }
+        .popup-overlay.show { display:flex; }
+        .popup-box { background:#161b22; border:2px solid #56d364; border-radius:16px; padding:40px 50px; text-align:center; max-width:420px; animation: popIn .4s cubic-bezier(.175,.885,.32,1.275); position:relative; }
+        @keyframes popIn { from { transform:scale(0.5); opacity:0; } to { transform:scale(1); opacity:1; } }
+        .popup-emoji { font-size:4rem; display:block; margin-bottom:12px; }
+        .popup-box h2 { color:#56d364; font-size:1.6rem; margin-bottom:8px; }
+        .popup-box p  { color:#8b949e; font-size:0.9rem; margin-bottom:20px; line-height:1.5; }
+        .popup-close { background:#238636; color:white; border:none; padding:10px 30px; border-radius:8px; font-size:1rem; cursor:pointer; }
+        .popup-close:hover { background:#2ea043; }
+        /* confetti */
+        .confetti-piece { position:fixed; width:10px; height:10px; border-radius:2px; animation: confettiFall 2.5s ease-in forwards; pointer-events:none; z-index:1100; }
+        @keyframes confettiFall {
+            0%   { transform: translateY(-20px) rotate(0deg); opacity:1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity:0; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <a href="/">← Home</a>
+    <h2>🔓 Lab 1 — WHERE Clause: Hidden Data Retrieval</h2>
+</header>
+
+<div class="container">
+    <div class="info-box">
+        <strong>Vulnerability:</strong> The category parameter is injected directly into the SQL WHERE clause without sanitization.<br>
+        <strong>Normal query:</strong> <code style="background:#0d1117;padding:2px 6px;border-radius:3px;font-size:0.85rem;">SELECT * FROM products WHERE category='Electronics' AND released=1</code><br>
+        <strong>Goal:</strong> Bypass <code>released=1</code> to reveal hidden/unreleased products.
+    </div>
+
+    <div class="payload-box">
+        <h4>🎯 Attack Payload — paste this into the search box:</h4>
+        <code>' OR 1=1--</code>
+        <code>Electronics' OR 1=1--</code>
+    </div>
+
+    <form method="GET">
+        <input type="text" name="category" placeholder="Enter category (e.g. Electronics, Books, Furniture)" value="{{ category }}">
+        <button type="submit">Search</button>
+    </form>
+
+    {% if query %}
+    <div class="query-display">
+        <strong style="color:#8b949e;">SQL Executed:</strong> {{ query }}
+    </div>
+    {% endif %}
+
+    {% if results %}
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Name</th><th>Description</th><th>Category</th><th>Released</th></tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>
+                    {% if row[4] == 0 %}
+                        <span class="badge-hidden">HIDDEN</span>
+                    {% else %}
+                        <span class="badge-visible">Visible</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% elif category %}
+    <div class="no-results">No results found.</div>
+    {% endif %}
+</div>
+
+<!-- ── CELEBRATION POPUP ── -->
+<div class="popup-overlay" id="popup">
+    <div class="popup-box">
+        <span class="popup-emoji">🎉</span>
+        <h2>Congratulations!</h2>
+        <p>You solved <strong>Lab 1</strong>!<br>Hidden products are now visible — the <code>released=1</code> filter was bypassed!</p>
+        <button class="popup-close" onclick="closePopup()">Awesome! 🚀</button>
+    </div>
+</div>
+
+<script>
+// Lab 1 is solved when a HIDDEN badge appears in the results
+function launchConfetti() {
+    const colors = ['#56d364','#f2cc60','#58a6ff','#f85149','#bc8cff','#ff7b72'];
+    for (let i = 0; i < 80; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.cssText = `
+            left: ${Math.random()*100}vw;
+            top: -10px;
+            background: ${colors[Math.floor(Math.random()*colors.length)]};
+            animation-delay: ${Math.random()*1.5}s;
+            animation-duration: ${2 + Math.random()*1.5}s;
+            transform: rotate(${Math.random()*360}deg);
+        `;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4000);
+    }
+}
+
+function closePopup() {
+    document.getElementById('popup').classList.remove('show');
+}
+
+window.onload = function() {
+    const hiddenBadges = document.querySelectorAll('.badge-hidden');
+    if (hiddenBadges.length > 0) {
+        setTimeout(() => {
+            document.getElementById('popup').classList.add('show');
+            launchConfetti();
+        }, 400);
+    }
+};
+</script>
+</body>
+</html>

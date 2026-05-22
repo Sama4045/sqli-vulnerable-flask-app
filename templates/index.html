@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SQLi Vulnerable App</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
+        header { background: #161b22; border-bottom: 1px solid #30363d; padding: 20px 40px; }
+        header h1 { color: #f85149; font-size: 1.6rem; }
+        header p  { color: #8b949e; font-size: 0.9rem; margin-top: 4px; }
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .warning { background: #3d1f00; border: 1px solid #f85149; border-radius: 8px; padding: 16px 20px; margin-bottom: 30px; font-size: 0.9rem; color: #ff7b72; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; text-decoration: none; color: inherit; transition: border-color 0.2s; display: block; }
+        .card:hover { border-color: #58a6ff; }
+        .card .lab-num { font-size: 0.75rem; color: #58a6ff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .card h3 { font-size: 1rem; color: #e6edf3; margin: 6px 0 8px; }
+        .card p  { font-size: 0.82rem; color: #8b949e; line-height: 1.5; }
+        .card .payload { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 6px 10px; font-family: monospace; font-size: 0.78rem; color: #f2cc60; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🔓 SQL Injection Vulnerable Lab App</h1>
+    <p>For Educational Use Only</p>
+</header>
+
+<div class="container">
+    <div class="warning">
+        ⚠️ <strong>WARNING:</strong> This application is intentionally vulnerable to SQL injection.
+        It is built for educational purposes only. Never deploy this on a public server.
+    </div>
+
+    <div class="grid">
+
+        <a href="/lab1?category=Electronics" class="card">
+            <div class="lab-num">Lab 1</div>
+            <h3>WHERE Clause — Hidden Data</h3>
+            <p>Bypass the <code>released=1</code> filter to reveal hidden products using OR injection.</p>
+            <div class="payload">' OR 1=1--</div>
+        </a>
+
+        <a href="/lab2" class="card">
+            <div class="lab-num">Lab 2</div>
+            <h3>Login Bypass</h3>
+            <p>Inject into the username field to log in as administrator without a password.</p>
+            <div class="payload">administrator'--</div>
+        </a>
+
+        <a href="/lab3" class="card">
+            <div class="lab-num">Lab 3</div>
+            <h3>UNION — Column Count</h3>
+            <p>Determine how many columns the query returns using ORDER BY or UNION NULLs.</p>
+            <div class="payload">' UNION SELECT NULL,NULL,NULL--</div>
+        </a>
+
+        <a href="/lab4" class="card">
+            <div class="lab-num">Lab 4</div>
+            <h3>UNION — Find Text Column</h3>
+            <p>Identify which column accepts string data by injecting 'abc' into each position.</p>
+            <div class="payload">' UNION SELECT 'abc',NULL,NULL--</div>
+        </a>
+
+        <a href="/lab5" class="card">
+            <div class="lab-num">Lab 5</div>
+            <h3>UNION — Other Tables</h3>
+            <p>Pull data from the hidden <code>secret_users</code> table via UNION injection.</p>
+            <div class="payload">' UNION SELECT username,password,NULL FROM secret_users--</div>
+        </a>
+
+        <a href="/lab6" class="card">
+            <div class="lab-num">Lab 6</div>
+            <h3>UNION — Multiple Values, One Column</h3>
+            <p>Concatenate username and password into a single column using SQLite's <code>||</code> operator.</p>
+            <div class="payload">' UNION SELECT NULL,username||':'||password,NULL FROM secret_users--</div>
+        </a>
+
+        <a href="/lab7" class="card">
+            <div class="lab-num">Lab 7</div>
+            <h3>DB Version Detection</h3>
+            <p>Extract the database version using <code>sqlite_version()</code> (MySQL uses <code>@@version</code>).</p>
+            <div class="payload">' UNION SELECT sqlite_version(),NULL,NULL--</div>
+        </a>
+
+        <a href="/lab8" class="card">
+            <div class="lab-num">Lab 8</div>
+            <h3>Database Schema Listing</h3>
+            <p>List all tables and columns from <code>sqlite_master</code> (MySQL uses <code>information_schema</code>).</p>
+            <div class="payload">' UNION SELECT name,NULL,NULL FROM sqlite_master WHERE type='table'--</div>
+        </a>
+
+    </div>
+</div>
+</body>
+</html>
